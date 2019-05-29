@@ -44,8 +44,8 @@ class RNA(object):
         #dimensão dos vetores W1 e W2
         #W1[N_neuronios_hidden][N_entradas_amostra]
         #W2[1][N_neuronios_hidden]
-        epoca = 0
-
+        epoca       = 0
+        media_erro  = []
         while True:
             erro        = False
             erro_local  = 0
@@ -77,7 +77,7 @@ class RNA(object):
                     erro_local += erro_local + abs(taxa_erro)
 
                     #descida de gradiente
-                    delta_y_output = derivada_sigmoid(y_output[0])*taxa_erro
+                    delta_y_output = derivada_sigmoid(self.y_output[0])*taxa_erro
 
                     #calculando a correção dos pesos w2, 
                     # que ligam os neuronios da camada escondida
@@ -91,8 +91,45 @@ class RNA(object):
                             correcao_w2[i][j] = self.taxa_aprendizado*self.y_hidden[i]*delta_y_output
                         self.bias_output[i] = self.taxa_aprendizado*-1*delta_y_output
                     
+                    #calculando erros da camada escondida
+                    delta_y_hidden = []
+                    for i in range(self.N_neuronios_hidden):
+                        delta_y_hidden[i] = derivada_sigmoid(self.y_hidden[i]*delta_y_output*self.w2[0][i])
+
+                    #calculando correção dos pesos w1
+                    correcao_w1 = []
+                    for i in range(self.N_neuronios_hidden):
+                        for j in range(self.N_entradas_amostra):
+                            correcao_w1[i][j] = self.taxa_aprendizado*self.amostras[index_amostra][j]*delta_y_hidden[i]
+
+                    #******************************************************
+                    # Backpropagation: aqui começa a atualização dos pesos
+                    #******************************************************
+                    #com os pesos w2 da camada de saída 
+                    for i in range(len(self.saida_desejada[0])):
+                        for j in range(self.N_neuronios_hidden):
+                            self.w2[i][j] += correcao_w2[i][j]
                     
+                    #com os pesos w1 da camada escondida
+                    for i in range(self.N_neuronios_hidden):
+                        for j in range(self.N_entradas_amostra):
+                            self.w1[i][j] += correcao_w1[i][j]
                     
+                    erro = True
+
+            media_erro[epoca] = 0
+            media_erro[epoca] = abs(erro_local/self.N_amostras)
+            epoca += 1
+
+            if(epoca ==  self.max_iteracoes or erro == False):
+                print("Pesos w1: ")
+                print(self.w1)
+                print("Pesos w2: ")
+                print(self.w2)
+                print("Epoca: ",epoca)
+                break
+
+        #gerar gráfico de média erros                    
 
 
 
